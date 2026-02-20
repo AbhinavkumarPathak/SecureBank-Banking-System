@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureBank | Premium Banking</title>
+    <!-- Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="background-overlay"></div>
+
+    <div class="app-container">
+        <!-- Login View -->
+        <section id="loginView" class="auth-card fade-in">
+            <div class="brand-header">
+                <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
+                <h1>Secure<span>Bank</span></h1>
+                <p>Digital Excellence in Banking</p>
+            </div>
+
+            <div class="form-container">
+                <div class="input-field">
+                    <label><i class="fas fa-id-card"></i> Account Number</label>
+                    <input type="number" id="accNo" placeholder="Enter your account number">
+                </div>
+                <div class="input-field">
+                    <label><i class="fas fa-lock"></i> Secure PIN</label>
+                    <input type="password" id="pin" placeholder="••••">
+                </div>
+                <button class="btn-glow" onclick="handleLogin()">
+                    <span>Sign In</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <div class="auth-footer">
+                <p>New to SecureBank? <a href="#" onclick="showView('registerView')">Create Account</a></p>
+            </div>
+            <div id="loginStatus" class="status-indicator"></div>
+        </section>
+
+        <!-- Register View -->
+        <section id="registerView" class="auth-card fade-in" style="display: none;">
+            <div class="brand-header">
+                <h1>Register</h1>
+                <p>Join our secure network</p>
+            </div>
+
+            <div class="form-container">
+                <div class="input-field">
+                    <label>Preferred Account Number</label>
+                    <input type="number" id="regAccNo" placeholder="6-digit preferred number">
+                </div>
+                <div class="input-field">
+                    <label>Full Name</label>
+                    <input type="text" id="regName" placeholder="John Doe">
+                </div>
+                <div class="input-field">
+                    <label>Set 4-Digit PIN</label>
+                    <input type="password" id="regPin" placeholder="••••">
+                </div>
+                <button class="btn-glow secondary" onclick="handleRegister()">
+                    <span>Create Account</span>
+                    <i class="fas fa-user-plus"></i>
+                </button>
+            </div>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a href="#" onclick="showView('loginView')">Sign In</a></p>
+            </div>
+            <div id="regStatus" class="status-indicator"></div>
+        </section>
+
+        <!-- Dashboard View -->
+        <section id="dashboardView" class="dashboard-layout fade-in" style="display: none;">
+            <nav class="top-nav">
+                <div class="nav-brand">
+                    <i class="fas fa-shield-halved"></i>
+                    <span>SecureBank</span>
+                </div>
+                <div class="user-profile">
+                    <span id="userNameDisplay">Welcome, User</span>
+                    <button class="logout-pill" onclick="handleLogout()">
+                        <i class="fas fa-power-off"></i>
+                    </button>
+                </div>
+            </nav>
+
+            <main class="dashboard-content">
+                <div class="sidebar">
+                    <div class="balance-widget">
+                        <span class="label">Available Balance</span>
+                        <h2 id="balanceDisplay">$0.00</h2>
+                        <button class="refresh-btn" onclick="updateBalance()"><i class="fas fa-sync"></i></button>
+                    </div>
+
+                    <div class="actions-panel">
+                        <h3>Quick Actions</h3>
+                        <div class="action-inputs">
+                            <div class="input-field dark">
+                                <input type="number" id="amount" placeholder="0.00">
+                            </div>
+                            <div class="action-btns">
+                                <button class="action-btn deposit" onclick="handleTransaction('deposit')">
+                                    <i class="fas fa-arrow-down"></i> Deposit
+                                </button>
+                                <button class="action-btn withdraw" onclick="handleTransaction('withdraw')">
+                                    <i class="fas fa-arrow-up"></i> Withdraw
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="history-panel">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-history"></i> Transaction History</h3>
+                    </div>
+                    <div class="transaction-list" id="transactionList">
+                        <!-- History items will be injected here -->
+                        <div class="empty-state">No transactions yet</div>
+                    </div>
+                </div>
+            </main>
+            <div id="dashStatus" class="status-toast"></div>
+        </section>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+
+</html>
