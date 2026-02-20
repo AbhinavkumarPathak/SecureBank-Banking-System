@@ -1,3 +1,6 @@
+// LIVE BACKEND URL
+const API_BASE = "https://securebank-pq4s.onrender.com";
+
 let token = "";
 let currentUser = "";
 
@@ -25,7 +28,7 @@ async function handleLogin() {
 
     try {
 
-        const res = await fetch("/login", {
+        const res = await fetch(API_BASE + "/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -76,14 +79,13 @@ async function handleRegister() {
 
     if (!accNo || !name || !pin) {
 
-        document.getElementById("regStatus").innerText =
-            "Fill all fields";
+        document.getElementById("regStatus").innerText = "Fill all fields";
         return;
     }
 
     try {
 
-        const res = await fetch("/create", {
+        const res = await fetch(API_BASE + "/create", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -114,7 +116,7 @@ async function updateBalance() {
 
     try {
 
-        const res = await fetch("/balance", {
+        const res = await fetch(API_BASE + "/balance", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -138,7 +140,7 @@ async function updateBalance() {
 }
 
 
-// TRANSACTION
+// TRANSACTION (FIXED)
 async function handleTransaction(type) {
 
     const amount = document.getElementById("amount").value;
@@ -147,7 +149,7 @@ async function handleTransaction(type) {
 
     try {
 
-        const res = await fetch("/" + type, {
+        const res = await fetch(API_BASE + "/" + type, {
 
             method: "POST",
 
@@ -165,7 +167,7 @@ async function handleTransaction(type) {
         const data = await res.json();
 
         document.getElementById("dashStatus").innerText =
-            data.message || "Transaction done";
+            data.message || "Transaction complete";
 
         await updateBalance();
         await loadHistory();
@@ -182,7 +184,7 @@ async function handleTransaction(type) {
 // LOGOUT
 async function handleLogout() {
 
-    await fetch("/logout", {
+    await fetch(API_BASE + "/logout", {
 
         method: "POST",
 
@@ -203,12 +205,12 @@ async function handleLogout() {
 }
 
 
-// LOAD TRANSACTION HISTORY (FIXED)
+// HISTORY
 async function loadHistory() {
 
     try {
 
-        const res = await fetch("/history", {
+        const res = await fetch(API_BASE + "/history", {
 
             method: "POST",
 
