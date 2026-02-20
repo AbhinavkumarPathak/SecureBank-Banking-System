@@ -1,8 +1,8 @@
-// LIVE BACKEND URL
-const API_BASE = "https://securebank-pq4s.onrender.com";
-
 let token = "";
 let currentUser = "";
+
+const API = "https://securebank-pq4s.onrender.com";
+
 
 // SWITCH VIEW
 function showView(viewId) {
@@ -28,11 +28,9 @@ async function handleLogin() {
 
     try {
 
-        const res = await fetch(API_BASE + "/login", {
+        const res = await fetch(API + "/login", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
                 accNo: parseInt(accNo),
                 pin: parseInt(pin)
@@ -58,14 +56,11 @@ async function handleLogin() {
 
             document.getElementById("loginStatus").innerText =
                 data.detail || "Login failed";
-
         }
 
     } catch (error) {
 
         document.getElementById("loginStatus").innerText = "Server error";
-        console.error(error);
-
     }
 }
 
@@ -85,11 +80,9 @@ async function handleRegister() {
 
     try {
 
-        const res = await fetch(API_BASE + "/create", {
+        const res = await fetch(API + "/create", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
                 accNo: parseInt(accNo),
                 name: name,
@@ -104,9 +97,7 @@ async function handleRegister() {
 
     } catch {
 
-        document.getElementById("regStatus").innerText =
-            "Registration failed";
-
+        document.getElementById("regStatus").innerText = "Registration failed";
     }
 }
 
@@ -116,14 +107,10 @@ async function updateBalance() {
 
     try {
 
-        const res = await fetch(API_BASE + "/balance", {
+        const res = await fetch(API + "/balance", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                token: token
-            })
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ token: token })
         });
 
         const data = await res.json();
@@ -133,14 +120,12 @@ async function updateBalance() {
 
     } catch {
 
-        document.getElementById("balanceDisplay").innerText =
-            "Error loading balance";
-
+        document.getElementById("balanceDisplay").innerText = "Error";
     }
 }
 
 
-// TRANSACTION (FIXED)
+// TRANSACTION
 async function handleTransaction(type) {
 
     const amount = document.getElementById("amount").value;
@@ -149,25 +134,19 @@ async function handleTransaction(type) {
 
     try {
 
-        const res = await fetch(API_BASE + "/" + type, {
-
+        const res = await fetch(API + "/" + type, {
             method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
                 token: token,
                 amount: parseFloat(amount)
             })
-
         });
 
         const data = await res.json();
 
         document.getElementById("dashStatus").innerText =
-            data.message || "Transaction complete";
+            data.message || "Success";
 
         await updateBalance();
         await loadHistory();
@@ -176,7 +155,6 @@ async function handleTransaction(type) {
 
         document.getElementById("dashStatus").innerText =
             "Transaction failed";
-
     }
 }
 
@@ -184,23 +162,13 @@ async function handleTransaction(type) {
 // LOGOUT
 async function handleLogout() {
 
-    await fetch(API_BASE + "/logout", {
-
+    await fetch(API + "/logout", {
         method: "POST",
-
-        headers: {
-            "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify({
-            token: token
-        })
-
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ token: token })
     });
 
     token = "";
-    currentUser = "";
-
     showView("loginView");
 }
 
@@ -210,18 +178,10 @@ async function loadHistory() {
 
     try {
 
-        const res = await fetch(API_BASE + "/history", {
-
+        const res = await fetch(API + "/history", {
             method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                token: token
-            })
-
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ token: token })
         });
 
         const data = await res.json();
@@ -262,22 +222,17 @@ async function loadHistory() {
                         <i class="fas ${icon}" style="color:${color}"></i>
                         ${tx.type}
                     </div>
-                    <div>
-                        ₹${tx.amount}
-                    </div>
-                    <div style="opacity:0.6;font-size:12px">
-                        ${tx.date}
-                    </div>
+                    <div>₹${tx.amount}</div>
+                    <div style="opacity:0.6;font-size:12px">${tx.date}</div>
                 </div>
             `;
 
             list.appendChild(item);
-
         });
 
-    } catch (error) {
-
-        console.error("History load failed:", error);
-
+    } catch (err) {
+        console.error("Error loading history:", err);
+        document.getElementById("transactionList").innerHTML =
+            '<div class="empty-state">Failed to load transactions</div>';
     }
 }
