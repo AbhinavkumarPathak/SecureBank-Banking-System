@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SecureBank Dashboard</title>
+<link rel="stylesheet" href="/static/dashboard.css">
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+<div class="layout">
+
+<!-- Sidebar -->
+<div class="sidebar">
+
+<h2 class="logo">
+<i class="fa fa-shield"></i>
+SecureBank
+</h2>
+
+<a href="/dashboard" class="active">
+<i class="fa fa-home"></i>
+Dashboard
+</a>
+
+<a href="/transfer">
+<i class="fa fa-exchange-alt"></i>
+Transfer
+</a>
+
+<a href="/history-page">
+<i class="fa fa-history"></i>
+Transactions
+</a>
+
+<a href="/profile">
+<i class="fa fa-user"></i>
+Profile
+</a>
+
+<a href="/settings">
+<i class="fa fa-cog"></i>
+Settings
+</a>
+
+<a href="/">
+<i class="fa fa-sign-out"></i>
+Logout
+</a>
+
+</div>
+
+
+<!-- Main -->
+<div class="main">
+
+<div class="topbar">
+
+<h1>Dashboard</h1>
+
+<div class="user">
+<i class="fa fa-user-circle"></i>
+<span id="username">Account</span>
+</div>
+
+</div>
+
+
+<div class="cards">
+
+<div class="card balance">
+<h3>Balance</h3>
+<h1 id="balance">₹0</h1>
+</div>
+
+<div class="card deposit">
+<h3>Deposit</h3>
+<input type="number" id="depositAmount">
+<button onclick="deposit()">Deposit</button>
+</div>
+
+<div class="card withdraw">
+<h3>Withdraw</h3>
+<input type="number" id="withdrawAmount">
+<button onclick="withdraw()">Withdraw</button>
+</div>
+
+</div>
+
+
+<div class="history">
+
+<h2>Recent Transactions</h2>
+
+<div id="transactions"></div>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="/static/dashboard.js"></script>
+
+</body>
+</html>

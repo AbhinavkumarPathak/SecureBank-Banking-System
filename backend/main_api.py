@@ -248,3 +248,26 @@ def logout(data: TokenRequest):
     return {
         "message": "Logged out"
     }
+    
+    
+from fastapi.responses import FileResponse
+
+@app.get("/dashboard")
+def dashboard():
+    return FileResponse("templates/dashboard.html")
+
+@app.get("/transfer")
+def transfer():
+    return FileResponse("templates/transfer.html")
+
+@app.get("/history-page")
+def history_page():
+    return FileResponse("templates/history.html")
+
+@app.get("/profile")
+def profile():
+    return FileResponse("templates/profile.html")
+
+@app.get("/settings")
+def settings():
+    return FileResponse("templates/settings.html")
