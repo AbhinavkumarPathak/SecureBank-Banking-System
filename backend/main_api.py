@@ -1,76 +1,65 @@
+# ================================
+# SecureBank Enterprise Backend
+# ================================
+
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-import subprocess
-import os
-import bcrypt
-
-# JWT imports
 from jose import jwt
 from datetime import datetime, timedelta
+import subprocess
+import os
 
+# ================================
+# JWT SETTINGS
+# ================================
 
-# JWT settings
 SECRET_KEY = "securebank-secret-key"
 ALGORITHM = "HS256"
+TOKEN_EXPIRE_HOURS = 24
 
+# ================================
+# CREATE FASTAPI APP
+# ================================
 
-# Create FastAPI app
 app = FastAPI()
 
+# ================================
+# PATH SETTINGS
+# ================================
 
-# Paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
-STATIC_DIR = os.path.join(BASE_DIR, "..", "static")
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
+
+FRONTEND_DIR = os.path.join(PROJECT_ROOT, "frontend")
+STATIC_DIR = os.path.join(PROJECT_ROOT, "static")
+
 BANK_EXE = os.path.join(BASE_DIR, "bank.exe")
 
+# ================================
+# MOUNT STATIC FILES
+# ================================
 
-# Mount static
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
+# ================================
+# TOKEN FUNCTIONS
+# ================================
 
-# Serve frontend
-@app.get("/")
-def serve_frontend():
-    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+def create_token(accNo, pin):
 
+    payload = {
+        "accNo": accNo,
+        "pin": pin,
+        "exp": datetime.utcnow() + timedelta(hours=TOKEN_EXPIRE_HOURS)
+    }
 
-# Models
-class LoginRequest(BaseModel):
-    accNo: int
-    pin: int
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-
-class RegisterRequest(BaseModel):
-    accNo: int
-    name: str
-    pin: int
+    return token
 
 
-class TokenRequest(BaseModel):
-    token: str
-
-
-class TransactionRequest(BaseModel):
-    token: str
-    amount: float
-
-
-# Helper to run bank.exe
-def run_bank_command(args):
-
-    result = subprocess.run(
-        [BANK_EXE] + args,
-        capture_output=True,
-        text=True
-    )
-
-    return result.stdout.strip()
-
-
-# JWT verify function
 def verify_token(token):
 
     try:
@@ -84,18 +73,64 @@ def verify_token(token):
         return payload
 
     except:
-
         raise HTTPException(
             status_code=401,
             detail="Invalid or expired token"
         )
 
+# ================================
+# MODELS
+# ================================
 
+class LoginRequest(BaseModel):
+    accNo: int
+    pin: int
+
+
+class RegisterRequest(BaseModel):
+    accNo: int
+    name: str
+    pin: int
+
+
+class SessionRequest(BaseModel):
+    token: str
+
+
+class TransactionRequest(BaseModel):
+    token: str
+    amount: float
+
+
+# ================================
+# HELPER FUNCTION
+# ================================
+
+def run_bank_command(args):
+
+    result = subprocess.run(
+        [BANK_EXE] + args,
+        capture_output=True,
+        text=True
+    )
+
+    return result.stdout.strip()
+
+# ================================
+# SERVE FRONTEND
+# ================================
+
+@app.get("/")
+def serve_frontend():
+    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+
+# ================================
 # LOGIN
+# ================================
+
 @app.post("/login")
 def login(data: LoginRequest):
 
-    # check using bank.exe
     output = run_bank_command([
         "balance",
         str(data.accNo),
@@ -103,47 +138,43 @@ def login(data: LoginRequest):
     ])
 
     if "ERROR" in output:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    payload = {
-        "accNo": data.accNo,
-        "pin": data.pin,
-        "exp": datetime.utcnow() + timedelta(hours=5)
-    }
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials"
+        )
 
-    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    token = create_token(data.accNo, data.pin)
 
     return {
         "status": "success",
         "token": token
     }
 
-
+# ================================
 # REGISTER
+# ================================
+
 @app.post("/create")
 def create(data: RegisterRequest):
-
-    # hash PIN
-    hashed_pin = bcrypt.hashpw(
-        str(data.pin).encode(),
-        bcrypt.gensalt()
-    ).decode()
 
     output = run_bank_command([
         "create",
         str(data.accNo),
         data.name,
-        hashed_pin
+        str(data.pin)
     ])
 
     return {
         "message": output
     }
 
-
+# ================================
 # BALANCE
+# ================================
+
 @app.post("/balance")
-def balance(data: TokenRequest):
+def balance(data: SessionRequest):
 
     payload = verify_token(data.token)
 
@@ -160,8 +191,10 @@ def balance(data: TokenRequest):
         "message": output
     }
 
-
+# ================================
 # DEPOSIT
+# ================================
+
 @app.post("/deposit")
 def deposit(data: TransactionRequest):
 
@@ -181,8 +214,10 @@ def deposit(data: TransactionRequest):
         "message": output
     }
 
-
+# ================================
 # WITHDRAW
+# ================================
+
 @app.post("/withdraw")
 def withdraw(data: TransactionRequest):
 
@@ -202,10 +237,12 @@ def withdraw(data: TransactionRequest):
         "message": output
     }
 
-
+# ================================
 # HISTORY
+# ================================
+
 @app.post("/history")
-def history(data: TokenRequest):
+def history(data: SessionRequest):
 
     payload = verify_token(data.token)
 
@@ -225,6 +262,7 @@ def history(data: TokenRequest):
         if ":" in line and " at " in line:
 
             parts = line.split(": ")
+
             type_part = parts[0]
 
             amount_time = parts[1].split(" at ")
@@ -239,35 +277,37 @@ def history(data: TokenRequest):
         "transactions": transactions
     }
 
-
+# ================================
 # LOGOUT
-@app.post("/logout")
-def logout(data: TokenRequest):
+# ================================
 
-    # JWT logout handled client-side
+@app.post("/logout")
+def logout(data: SessionRequest):
+
     return {
-        "message": "Logged out"
+        "message": "Logged out successfully"
     }
-    
-    
-from fastapi.responses import FileResponse
+
+# ================================
+# PROFESSIONAL PAGE ROUTES
+# ================================
 
 @app.get("/dashboard")
 def dashboard():
-    return FileResponse("templates/dashboard.html")
+    return FileResponse(os.path.join(FRONTEND_DIR, "dashboard.html"))
 
 @app.get("/transfer")
 def transfer():
-    return FileResponse("templates/transfer.html")
+    return FileResponse(os.path.join(FRONTEND_DIR, "transfer.html"))
 
 @app.get("/history-page")
 def history_page():
-    return FileResponse("templates/history.html")
+    return FileResponse(os.path.join(FRONTEND_DIR, "history.html"))
 
 @app.get("/profile")
 def profile():
-    return FileResponse("templates/profile.html")
+    return FileResponse(os.path.join(FRONTEND_DIR, "profile.html"))
 
 @app.get("/settings")
 def settings():
-    return FileResponse("templates/settings.html")
+    return FileResponse(os.path.join(FRONTEND_DIR, "settings.html"))

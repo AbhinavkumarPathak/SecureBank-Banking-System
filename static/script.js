@@ -1,40 +1,84 @@
-let token = "";
-let currentUser = "";
+// ===============================
+// SecureBank Enterprise Script
+// ===============================
 
+// Backend API
 const API = "https://securebank-pq4s.onrender.com";
 
+// Session variables
+let token = localStorage.getItem("token") || "";
+let currentUser = localStorage.getItem("currentUser") || "";
 
+
+// ===============================
+// AUTO LOGIN IF TOKEN EXISTS
+// ===============================
+
+window.onload = function () {
+
+    if (token) {
+
+        showView("dashboardView");
+
+        document.getElementById("userNameDisplay").innerText =
+            "Welcome, Account " + currentUser;
+
+        updateBalance();
+        loadHistory();
+    }
+};
+
+
+// ===============================
 // SWITCH VIEW
+// ===============================
+
 function showView(viewId) {
 
-    document.getElementById("loginView").style.display = "none";
-    document.getElementById("registerView").style.display = "none";
-    document.getElementById("dashboardView").style.display = "none";
+    const views = ["loginView", "registerView", "dashboardView"];
 
-    document.getElementById(viewId).style.display = "block";
+    views.forEach(v => {
+        const el = document.getElementById(v);
+        if (el) el.style.display = "none";
+    });
+
+    const target = document.getElementById(viewId);
+    if (target) target.style.display = "block";
 }
 
 
+// ===============================
 // LOGIN
+// ===============================
+
 async function handleLogin() {
 
     const accNo = document.getElementById("accNo").value;
     const pin = document.getElementById("pin").value;
 
     if (!accNo || !pin) {
-        document.getElementById("loginStatus").innerText = "Enter credentials";
+
+        document.getElementById("loginStatus").innerText =
+            "Enter credentials";
+
         return;
     }
 
     try {
 
         const res = await fetch(API + "/login", {
+
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
             body: JSON.stringify({
                 accNo: parseInt(accNo),
                 pin: parseInt(pin)
             })
+
         });
 
         const data = await res.json();
@@ -44,6 +88,10 @@ async function handleLogin() {
             token = data.token;
             currentUser = accNo;
 
+            // Save session
+            localStorage.setItem("token", token);
+            localStorage.setItem("currentUser", currentUser);
+
             document.getElementById("userNameDisplay").innerText =
                 "Welcome, Account " + accNo;
 
@@ -52,20 +100,26 @@ async function handleLogin() {
             await updateBalance();
             await loadHistory();
 
-        } else {
+        }
+        else {
 
             document.getElementById("loginStatus").innerText =
                 data.detail || "Login failed";
         }
 
-    } catch (error) {
+    }
+    catch (error) {
 
-        document.getElementById("loginStatus").innerText = "Server error";
+        document.getElementById("loginStatus").innerText =
+            "Server error";
     }
 }
 
 
+// ===============================
 // REGISTER
+// ===============================
+
 async function handleRegister() {
 
     const accNo = document.getElementById("regAccNo").value;
@@ -74,20 +128,28 @@ async function handleRegister() {
 
     if (!accNo || !name || !pin) {
 
-        document.getElementById("regStatus").innerText = "Fill all fields";
+        document.getElementById("regStatus").innerText =
+            "Fill all fields";
+
         return;
     }
 
     try {
 
         const res = await fetch(API + "/create", {
+
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
             body: JSON.stringify({
                 accNo: parseInt(accNo),
                 name: name,
                 pin: parseInt(pin)
             })
+
         });
 
         const data = await res.json();
@@ -95,22 +157,37 @@ async function handleRegister() {
         document.getElementById("regStatus").innerText =
             data.message || "Account created";
 
-    } catch {
+    }
+    catch {
 
-        document.getElementById("regStatus").innerText = "Registration failed";
+        document.getElementById("regStatus").innerText =
+            "Registration failed";
     }
 }
 
 
+// ===============================
 // BALANCE
+// ===============================
+
 async function updateBalance() {
+
+    if (!token) return;
 
     try {
 
         const res = await fetch(API + "/balance", {
+
             method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ token: token })
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                token: token
+            })
+
         });
 
         const data = await res.json();
@@ -118,29 +195,40 @@ async function updateBalance() {
         document.getElementById("balanceDisplay").innerText =
             data.message || "Balance unavailable";
 
-    } catch {
+    }
+    catch {
 
-        document.getElementById("balanceDisplay").innerText = "Error";
+        document.getElementById("balanceDisplay").innerText =
+            "Error";
     }
 }
 
 
+// ===============================
 // TRANSACTION
+// ===============================
+
 async function handleTransaction(type) {
 
     const amount = document.getElementById("amount").value;
 
-    if (!amount) return;
+    if (!amount || !token) return;
 
     try {
 
         const res = await fetch(API + "/" + type, {
+
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
             body: JSON.stringify({
                 token: token,
                 amount: parseFloat(amount)
             })
+
         });
 
         const data = await res.json();
@@ -151,7 +239,8 @@ async function handleTransaction(type) {
         await updateBalance();
         await loadHistory();
 
-    } catch {
+    }
+    catch {
 
         document.getElementById("dashStatus").innerText =
             "Transaction failed";
@@ -159,29 +248,62 @@ async function handleTransaction(type) {
 }
 
 
+// ===============================
 // LOGOUT
+// ===============================
+
 async function handleLogout() {
 
-    await fetch(API + "/logout", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ token: token })
-    });
+    try {
+
+        await fetch(API + "/logout", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                token: token
+            })
+
+        });
+
+    } catch {}
 
     token = "";
+    currentUser = "";
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("currentUser");
+
     showView("loginView");
 }
 
 
+// ===============================
 // HISTORY
+// ===============================
+
 async function loadHistory() {
+
+    if (!token) return;
 
     try {
 
         const res = await fetch(API + "/history", {
+
             method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ token: token })
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                token: token
+            })
+
         });
 
         const data = await res.json();
@@ -194,6 +316,7 @@ async function loadHistory() {
 
             list.innerHTML =
                 '<div class="empty-state">No transactions yet</div>';
+
             return;
         }
 
@@ -203,11 +326,13 @@ async function loadHistory() {
             let color = "#ccc";
 
             if (tx.type.toLowerCase().includes("deposit")) {
+
                 icon = "fa-arrow-down";
                 color = "#00ffa3";
             }
 
             if (tx.type.toLowerCase().includes("withdraw")) {
+
                 icon = "fa-arrow-up";
                 color = "#ff6b6b";
             }
@@ -230,8 +355,9 @@ async function loadHistory() {
             list.appendChild(item);
         });
 
-    } catch (err) {
-        console.error("Error loading history:", err);
+    }
+    catch {
+
         document.getElementById("transactionList").innerHTML =
             '<div class="empty-state">Failed to load transactions</div>';
     }
